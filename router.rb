@@ -8,8 +8,7 @@ include Proxy
 BASE_URL = 'http://feeds.feedburner.com/HighScalability'
 
 before do
-	cache_control :public, :max_age => 600
-	puts "access log - #{Time.now} - #{request.ip} - #{request.url} - #{request.user_agent}"
+	cache_control :public, :max_age => 3600
 end
 
 get '/' do	
@@ -24,7 +23,7 @@ get '/' do
 		head = get_clean_html_part(origin, 'head') if head.nil?
 		body += get_clean_html_part(origin, 'body') + '<hr/>' 
 	end
-	body = "<html>#{head}<body>#{body}</body></html>"
+	body = "<html>#{head}<body style=\"font-family: 'Times New Roman', Palatino, serif; text-align: left; background-color: white; margin: 50px; background-image: none; color: black; vertical-align: center;\">#{body}</body></html>"
 end
 
 get '/rss' do
