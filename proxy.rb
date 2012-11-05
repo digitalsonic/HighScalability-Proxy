@@ -23,7 +23,7 @@ module Proxy
 	def parse_rss_items full_rss
 		items = []
 		rss = RSS::Parser.parse full_rss, false
-		rss.items.each { |item| items << {:title => item.title, :link => item.link, :pubDate => item.pubDate, :dc_creator => item.dc_creator} }
+		rss.items.each { |item| items << {:title => item.title, :link => item.link, :pub_date => item.pubDate, :dc_creator => item.dc_creator} }
 		items.delete_if { |item| item[:title].start_with?('Sponsored Post:') }
 		items
 	end
@@ -39,31 +39,20 @@ module Proxy
 		response.body
 	end
 
-	def get_clean_head html
-		head = ""
-		is_head = false
-		html.each_line do |line|
-			if line =~ /^.*<head.*$/
-				is_head = true 
-				next
-			end
-			break if line =~ /^.*<\/head.*$/
-			head += line if is_head
-		end
-		head
-	end
+	def get_clean_html_part html, tag
+		regexp_start = Regexp.new "^.*<#{tag}.*$"
+		regexp_end = Regexp.new "^.*<\/#{tag}.*$"
 
-	def get_clean_body html
-		body = ""
-		is_body = false
+		part = ""
+		is_needed = false
 		html.each_line do |line|
-			if line =~ /^.*<body.*$/
-				is_body = true 
+			if regexp_start.match(line)
+				is_needed = true 
 				next
 			end
-			break if line =~ /^.*<\/body.*$/
-			body += line if is_body
+			break if regexp_end.match(line)
+			part += "#{line}" if is_needed
 		end
-		body
+		part
 	end
 end
