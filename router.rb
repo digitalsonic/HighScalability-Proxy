@@ -20,8 +20,8 @@ get '/' do
 	head = nil
 	real_links.each do |l| 
 		origin = fetch_article_content(l)
-		head = get_clean_html_part(origin, 'head') if head.nil?
-		body += get_clean_html_part(origin, 'body') + '<hr/>' 
+		head = replace_default_location(get_clean_html_part(origin, 'head')) if head.nil?
+		body += replace_default_location(get_clean_html_part(origin, 'body')) + '<hr/>' 
 	end
 	body = "<html>#{head}<body style=\"font-family: 'Times New Roman', Palatino, serif; text-align: left; background-color: white; margin: 50px; background-image: none; color: black; vertical-align: center;\">#{body}</body></html>"
 end

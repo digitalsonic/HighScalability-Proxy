@@ -55,4 +55,8 @@ module Proxy
 		end
 		part
 	end
+
+	def replace_default_location html
+		html.gsub(/ href="\//, ' href="http://highscalability.com/')
+	end
 end
