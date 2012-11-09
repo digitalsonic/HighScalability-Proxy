@@ -13,6 +13,7 @@ module Proxy
 			path = url.path
 			path += "?#{url.query}" unless url.query.nil?
 			response = http.get(path)
+			logger.info "Fetching #{url} #{path}."
 			if (response == Net::HTTPRedirection or response == Net::HTTPFound)
 				response = fetch response['location']
 			end
