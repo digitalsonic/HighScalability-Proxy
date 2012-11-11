@@ -13,7 +13,7 @@ module Proxy
 			path = url.path
 			path += "?#{url.query}" unless url.query.nil?
 			response = http.get(path)
-			logger.info "Fetching #{url} #{path}."
+			logger.info "Fetching #{url}#{path}."
 			if (response == Net::HTTPRedirection or response == Net::HTTPFound)
 				response = fetch response['location']
 			end
@@ -58,6 +58,18 @@ module Proxy
 	end
 
 	def replace_default_location html
-		html.gsub(/ href="\//, ' href="http://highscalability.com/')
+		html.gsub(/ href="\//, " href=\"#{HIGHSCALABILITY_URL}")
+	end
+
+	def need_refresh_cache cache
+		if (Time.now - CACHE_EXPIRES) >= cache[:last_modified]
+			logger.info "#{request.path} - #{request.ip} - Cache needs to be refreshed."
+			return true
+		end
+	end
+	
+	def refresh_cache cache, obj
+		cache[:last_modified] = Time.now
+		cache[:obj] = obj
 	end
 end
