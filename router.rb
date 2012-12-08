@@ -6,6 +6,8 @@ require 'proxy'
 include Proxy
 
 BASE_URL = 'http://feeds.feedburner.com/HighScalability'
+# for test
+# BASE_URL = 'http://highscalability-proxy.cloudfoundry.com/origin_rss'
 HIGHSCALABILITY_URL = 'http://highscalability.com/'
 CACHE_EXPIRES = 3600
 
@@ -20,17 +22,18 @@ get '/' do
 	if need_refresh_cache(body_cache)
 		response = fetch BASE_URL
 		items = parse_rss_items response.body
-		real_links = []
-		items.each { |i| real_links << get_clean_highscalability_url(i[:link]) }
+		real_links = get_real_links items
+		contents = get_the_full_articles_asynchronously real_links
+
 		body = ''
 		head = nil
 		real_links.each do |l| 
-			origin = fetch_article_content(l)
-			head = replace_default_location(get_clean_html_part(origin, 'head')) if head.nil?
-			body += replace_default_location(get_clean_html_part(origin, 'body')) + '<hr/>' 
+			head = replace_default_location(get_clean_html_part(contents[l], 'head')) if head.nil?
+			body += replace_default_location(get_clean_html_part(contents[l], 'body')) + '<hr/>' 
 		end
+		
 		body = "<html>#{head}<body style=\"font-family: 'Times New Roman', Palatino, serif; text-align: left; background-color: white; margin: 50px; background-image: none; color: black; vertical-align: center;\">#{body}</body></html>"
-		refresh_cache(body_cache, body)
+		refresh_cache body_cache, body
 	end
 	body_cache[:obj]
 end
@@ -39,6 +42,9 @@ get '/rss' do
 	if need_refresh_cache(rss_cache)
 		response = fetch BASE_URL
 		items = parse_rss_items response.body
+		real_links = get_real_links items
+		contents = get_the_full_articles_asynchronously real_links
+
 		rss = RSS::Maker.make('2.0') do |maker|
 			maker.channel.author = "Todd Hoff"
 			maker.channel.updated = Time.now.to_s
@@ -53,11 +59,11 @@ get '/rss' do
 					i.title = item[:title]
 					i.updated = item[:pub_date]
 					i.author = item[:dc_creator]
-					i.description = get_clean_html_part(fetch_article_content(i.link), 'body')
+					i.description = replace_default_location(get_clean_html_part(contents[i.link], 'body'))
 				end
 			end
 		end
-		rss_cache[:obj] = [200, {'Content-Type' => 'application/rss+xml'}, rss.to_s]
+		refresh_cache rss_cache, [200, {'Content-Type' => 'application/rss+xml'}, rss.to_s]
 	end
 	rss_cache[:obj]
 end

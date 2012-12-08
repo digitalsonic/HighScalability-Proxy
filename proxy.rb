@@ -4,6 +4,8 @@ require 'rss/2.0'
 require 'rss/dublincore'
 require 'net/http'
 require 'uri'
+require 'eventmachine'
+require 'em-http-request'
 
 module Proxy
 	def fetch uri
@@ -59,6 +61,29 @@ module Proxy
 
 	def replace_default_location html
 		html.gsub(/ href="\//, " href=\"#{HIGHSCALABILITY_URL}")
+	end
+
+	def get_real_links items
+		items.inject([]) { |arr, i| arr << get_clean_highscalability_url(i[:link]) }
+	end
+
+	def get_the_full_articles_asynchronously links
+		contents = {}
+
+		EM.run do
+			multi = EM::MultiRequest.new
+			links.each { |link| multi.add link, EM::HttpRequest.new(link).get }
+			multi.callback do 
+				multi.responses[:callback].each { |k, v| contents[k] = v.response }
+				EM.stop
+			end
+			multi.errback do 
+				logger.warn multi.responses[:errback]
+				EM.stop 
+			end
+		end
+
+		contents
 	end
 
 	def need_refresh_cache cache
