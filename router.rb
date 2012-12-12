@@ -1,7 +1,7 @@
 require 'rubygems'
 require 'sinatra'
 require 'rss'
-require 'proxy'
+require File.join(File.dirname(__FILE__), 'proxy.rb')
 
 include Proxy
 
