@@ -37,11 +37,6 @@ module Proxy
 		"#{url.scheme}://#{url.host}#{url.path}?printerFriendly=true"
 	end
 
-	def fetch_article_content url
-		response = Net::HTTP.get_response(URI.parse(url))
-		response.body
-	end
-
 	def get_clean_html_part html, tag
 		regexp_start = Regexp.new "^.*<#{tag}.*$"
 		regexp_end = Regexp.new "^.*<\/#{tag}.*$"
